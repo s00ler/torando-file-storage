@@ -4,7 +4,7 @@
 ```
 git clone https://github.com/s00ler/tornado-file-storage.git
 cd path/to/cloned/rep/
-pip3 install requirements.txt
+pip3 install -r requirements.txt
 ```
 ### Important: requires poppler package.
 For OS X users:
