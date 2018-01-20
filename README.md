@@ -2,7 +2,7 @@
 
 ## Installation
 ```
-git clone lalalal
+git clone https://github.com/s00ler/tornado-file-storage.git
 cd path/to/cloned/rep/
 pip3 install requirements.txt
 ```

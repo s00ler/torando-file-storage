@@ -1,14 +1,10 @@
 from os import path
 
-from configparser import ConfigParser
 from pdf2image import convert_from_path
 
 from tornado import auth, httpserver, ioloop, web, escape
 from database import DataBase
-
-
-config = ConfigParser()
-config.read('config.ini')
+from config import config
 
 db = DataBase('sqlite:///{}'.format(config['server']['database_path']))
 
@@ -18,7 +14,7 @@ class BaseHandler(web.RequestHandler):
         cookie = self.get_secure_cookie('user')
         if cookie is not None:
             cookie = cookie.decode()
-            if db.get_user(cookie) is None:
+            if db.get_user(name=cookie) is None:
                 self.clear_cookie('user')
                 cookie = None
         return cookie
@@ -27,13 +23,11 @@ class BaseHandler(web.RequestHandler):
 class MainHandler(BaseHandler):
     @web.authenticated
     def get(self):
-        print('main get')
         if not self.current_user:
             self.redirect('/login/')
             return
-        name = escape.xhtml_escape(self.current_user)
         self.render('main.html',
-                    username=name,
+                    username=self.current_user,
                     file_list=self._generate_file_list(),
                     error=self.get_argument('error', None))
 
@@ -52,11 +46,12 @@ class MainHandler(BaseHandler):
                 self.redirect('/')
 
     def _generate_file_list(self):
-        files = db.get_file('%')
+        files = db.get_file(name='%')
         result = []
         for file in files:
-            result.append(file)
-            result.extend(db.get_pages(file.id))
+            result.append({'file': file,
+                           'user': db.get_user(id=file.author_id)})
+            result.append(db.get_pages(origin_id=file.id))
         return result
 
     def _upload_file(self):
@@ -64,18 +59,17 @@ class MainHandler(BaseHandler):
         try:
             fileinfo = self.request.files['filearg'][0]
         except Exception:
-            error = error
+            error = 'No file to upload'
             return error
+        fileinfo['filename'] = escape.url_unescape(fileinfo['filename'])
         filename = path.splitext(fileinfo['filename'])
-        if filename[1] == '.pdf':
-            existing_files = db.get_file(name=filename[0])
+        if filename[-1] == '.pdf':
+            existing_files = db.get_file(name=''.join(filename[:-1]))
             if len(existing_files) == 0:
                 self._save_file_and_pages(fileinfo)
             else:
-                filename = (
-                    filename[0] + '_({})'.format(len(existing_files)),
-                    filename[1]
-                )
+                filename = list(filename)
+                filename[-2] += '_({})'.format(len(existing_files))
                 fileinfo['filename'] = ''.join(filename)
                 self._save_file_and_pages(fileinfo)
         else:
@@ -83,26 +77,26 @@ class MainHandler(BaseHandler):
         return error
 
     def _save_file_and_pages(self, fileinfo):
-        filepath = path.join(
-            config['server']['files_path'], fileinfo['filename'])
-        with open(path.join(config['server']['static_path'],
-                            filepath), 'wb') as f:
+        base_path = config['server']['files_path']
+        save_path = path.join(config['server']['static_path'],
+                              config['server']['files_path'])
+        filename = fileinfo['filename']
+
+        with open(path.join(save_path, filename), 'wb') as f:
             f.write(fileinfo['body'])
 
-        db.add_file(author_id=db.get_user(self.current_user).id,
-                    name=fileinfo['filename'],
-                    path=filepath)
-
-        for i, img in enumerate(convert_from_path(
-                path.join(config['server']['static_path'], filepath))):
-            file_base_name = path.splitext(fileinfo['filename'])[0]
-            page_name = '{}_page{}.png'.format(file_base_name, i + 1)
-            page_path = path.join(config['server']['files_path'], page_name)
-            db.add_page(origin_id=db.get_file(fileinfo['filename'])[0].id,
-                        name='__page_{}.png'.format(i + 1),
-                        path=page_path)
-            img.save(path.join(config['server']['static_path'],
-                               page_path))
+        db.add_file(author_id=db.get_user(name=self.current_user).id,
+                    name=filename,
+                    path=path.join(base_path, filename))
+        file_id = db.get_file(name=filename)[0].id
+        for i, img in enumerate(convert_from_path(path.join(save_path,
+                                                            filename))):
+            file_basename = ''.join(path.splitext(filename)[:-1])
+            page_name = '{}_pg{}.png'.format(file_basename, i + 1)
+            db.add_page(origin_id=file_id,
+                        name='page_{}.png'.format(i + 1),
+                        path=path.join(base_path, page_name))
+            img.save(path.join(save_path, page_name))
 
 
 class LoginHandler(BaseHandler):
@@ -125,11 +119,11 @@ class LoginHandler(BaseHandler):
             self.redirect('/')
 
     def _signin(self):
-        username = self.get_argument('username', None)
-        password = self.get_argument('password', None)
+        username = escape.xhtml_escape(self.get_argument('username', None))
+        password = escape.xhtml_escape(self.get_argument('password', None))
         error = None
         if username is not None and password is not None:
-            user = db.get_user(username)
+            user = db.get_user(name=username)
             if user is not None and user.password == password:
                 self.set_secure_cookie('user', username)
             else:
@@ -139,11 +133,11 @@ class LoginHandler(BaseHandler):
         return error
 
     def _signup(self):
-        username = self.get_argument('username', None)
-        password = self.get_argument('password', None)
+        username = escape.xhtml_escape(self.get_argument('username', None))
+        password = escape.xhtml_escape(self.get_argument('password', None))
         error = None
         if username is not None and password is not None:
-            user = db.get_user(username)
+            user = db.get_user(name=username)
             if user is None:
                 db.add_user(name=username, password=password)
                 self.set_secure_cookie('user', username)
