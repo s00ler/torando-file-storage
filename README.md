@@ -7,7 +7,7 @@ cd path/to/cloned/rep/
 pip3 install requirements.txt
 ```
 ### Important: requires poppler package.
-As i use mac os, i used:
+For OS X users:
 ```
 brew install poppler
 ```
