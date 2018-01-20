@@ -1,0 +1,38 @@
+<div id="main-container">
+    <div id="main">
+        <div id="main">
+            <link rel="shortcut icon" href="{{ static_url('favicon.ico') }}">
+            <form id="main_form" enctype="multipart/form-data" action="/" method="post">
+                <table>
+                    <tr>
+                        <td>Hello, {{username}}!</td>
+                        <td>
+                            <div id="form_btn">
+                                <input id="logout-btn" class="btn btn-blue"
+                                    type="submit" value="Logout" name="logout" tabindex="2">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <ul>
+                                {% for file in file_list %}
+                                <li><a href="{{ static_url(file.path) }}" download="{{file.name}}">{{ file.name }}</a></li>
+                                {% end %}
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><input type="file" name="filearg" value="filearg"></td>
+                        <td><input type="submit" value="Upload" name="upload"/></td>
+                    </tr>
+                    {% if error is not None %}
+                    <tr>
+                        <td>Error: {{error}}</td>
+                    </tr>
+                    {% end %}
+                </table>
+            </form>
+        </div>
+    </div>
+</div>
