@@ -61,7 +61,11 @@ class MainHandler(BaseHandler):
 
     def _upload_file(self):
         error = None
-        fileinfo = self.request.files['filearg'][0]
+        try:
+            fileinfo = self.request.files['filearg'][0]
+        except Exception:
+            error = error
+            return error
         filename = path.splitext(fileinfo['filename'])
         if filename[1] == '.pdf':
             existing_files = db.get_file(name=filename[0])
@@ -89,7 +93,8 @@ class MainHandler(BaseHandler):
                     name=fileinfo['filename'],
                     path=filepath)
 
-        for i, img in enumerate(convert_from_path(filepath)):
+        for i, img in enumerate(convert_from_path(
+                path.join(config['server']['static_path'], filepath))):
             file_base_name = path.splitext(fileinfo['filename'])[0]
             page_name = '{}_page{}.png'.format(file_base_name, i + 1)
             page_path = path.join(config['server']['files_path'], page_name)
