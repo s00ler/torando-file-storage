@@ -33,22 +33,39 @@ class DataBase:
         page = Page(origin_id=origin_id, name=name, path=path)
         self._add(page)
 
-    def get_user(self, name):
+    def get_user(self, id=None, name=None):
         session = self._session()
-        result = session.query(User).filter(User.name == name).first()
+        result = None
+        if id is not None:
+            result = session.query(User).filter(User.id == id).first()
+        elif name is not None:
+            result = session.query(User).filter(User.name == name).first()
         session.close()
         return result
 
-    def get_file(self, name):
+    def get_file(self, id=None, author_id=None, name=None):
         session = self._session()
-        result = session.query(File).filter(
-            File.name.like('{}%'.format(name))).all()
+        result = None
+        if id is not None:
+            result = session.query(File).filter(File.id == id).first()
+        elif author_id is not None:
+            result = session.query(File).filter(
+                File.author_id == author_id).all()
+        elif name is not None:
+            result = session.query(File).filter(
+                File.name.like('{}%'.format(name))).all()
         session.close()
         return result
 
-    def get_pages(self, origin_id):
+    def get_pages(self, id=None, origin_id=None):
         session = self._session()
-        result = session.query(Page).filter(Page.origin_id == origin_id).all()
+        result = None
+        if id is not None:
+            result = session.query(Page).filter(
+                Page.id == id).first()
+        elif origin_id is not None:
+            result = session.query(Page).filter(
+                Page.origin_id == origin_id).all()
         session.close()
         return result
 

@@ -9,7 +9,7 @@
                             <label for="username">Username</label>
                         </td>
                         <td>
-                            <input autocapitalize="off" autocorrect="off" class="text-input" id="username" name="username" tabindex="1" type="text" value="">
+                            <input autocapitalize="off" autocorrect="off" class="text-input" id="username" name="username" tabindex="1" type="text" value="" minlength="1" required>
                         </td>
                     </tr>
                     <tr>
@@ -17,7 +17,7 @@
                             <label for="password">Password</label>
                         </td>
                         <td>
-                            <input class="text-input" id="password" name="password" tabindex="2" type="password" value="">
+                            <input class="text-input" id="password" name="password" tabindex="2" type="password" value="" minlength="1" required>
                         </td>
                     </tr>
                     <tr>
@@ -32,12 +32,14 @@
                             </div>
                         </td>
                     </tr>
-                    {% if error is not None %}
+                </table>
+                {% if error is not None %}
+                <table>
                     <tr>
                         <td>Error: {{error}}<td>
                     </tr>
-                    {% end %}
                 </table>
+                {% end %}
             </form>
         </div>
     </div>

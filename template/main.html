@@ -5,33 +5,40 @@
             <form id="main_form" enctype="multipart/form-data" action="/" method="post">
                 <table>
                     <tr>
-                        <td>Hello, {{username}}!</td>
                         <td>
                             <div id="form_btn">
-                                <input id="logout-btn" class="btn btn-blue"
-                                    type="submit" value="Logout" name="logout" tabindex="2">
+                                Hello, {{username}}! <input id="logout-btn" class="btn btn-blue" type="submit" value="Logout" name="logout" tabindex="2">
                             </div>
                         </td>
                     </tr>
                     <tr>
                         <td>
                             <ul>
-                                {% for file in file_list %}
-                                <li><a href="{{ static_url(file.path) }}" download="{{file.name}}">{{ file.name }}</a></li>
-                                {% end %}
+                                {% for file in file_list %} {% if type(file) != list%}
+                                <li>{{ file['user'].name }}: <a href="{{ static_url(file['file'].path) }}" download="{{file['file'].name}}">{{ file['file'].name }}</a></li>
+                                {% else %}
+                                <ul>
+                                    {%for page in file%}
+                                    <li><a href="{{ static_url(page.path) }}" download="{{page.name}}">{{ page.name }}</a></li>
+                                    {% end %}
+                                </ul>
+                                {% end %} {% end %}
                             </ul>
                         </td>
                     </tr>
                     <tr>
-                        <td><input type="file" name="filearg" value="filearg"></td>
+                        <td><input type="file" name="filearg" value="filearg"/></td>
                         <td><input type="submit" value="Upload" name="upload"/></td>
                     </tr>
-                    {% if error is not None %}
-                    <tr>
-                        <td>Error: {{error}}</td>
-                    </tr>
-                    {% end %}
                 </table>
+                {% if error is not None %}
+                <table>
+                    <tr>
+                        <td>Error: {{error}}
+                            <td>
+                    </tr>
+                </table>
+                {% end %}
             </form>
         </div>
     </div>
