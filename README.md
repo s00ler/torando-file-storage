@@ -25,3 +25,4 @@ Open your browser and go to (use port value specified in config.ini, 8181 by def
 ```
 localhost:port
 ```
+Also, server is started on my droplet at http://178.62.247.47:8181, so you can use it, unless it is stopped for some reason.
